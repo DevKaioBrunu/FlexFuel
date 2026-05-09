@@ -1,16 +1,46 @@
-// ─────────── STATE ───────────
-let vehicles = JSON.parse(sessionStorage.getItem('ff_vehicles') || '[]');
-let history  = JSON.parse(sessionStorage.getItem('ff_history')  || '[]');
-let selectedVehicleId = null;
+// Estado
+const STORAGE_KEYS={vehicles:'ff_vehicles',history:'ff_history',selected:'ff_selected_vehicle',theme:'ff_theme'};
+
+function readStored(key,fallback=''){
+  try{
+    return localStorage.getItem(key) ?? sessionStorage.getItem(key) ?? fallback;
+  }catch(e){
+    try{return sessionStorage.getItem(key) ?? fallback;}catch(err){return fallback;}
+  }
+}
+
+function writeStored(key,value){
+  try{localStorage.setItem(key,value);}catch(e){}
+  try{sessionStorage.setItem(key,value);}catch(e){}
+}
+
+let vehicles = JSON.parse(readStored(STORAGE_KEYS.vehicles,'[]'));
+let history  = JSON.parse(readStored(STORAGE_KEYS.history,'[]'));
+let selectedVehicleId = readStored(STORAGE_KEYS.selected,'') || null;
+
+function normalizeVehicle(v){
+  return {...v,tipo:v.tipo==='moto'?'moto':'carro'};
+}
+
+vehicles=vehicles.map(normalizeVehicle);
+
+function vehicleTypeLabel(type){
+  return type==='moto'?'Moto':'Carro';
+}
+
+function vehicleTypeBadgeClass(type){
+  return type==='moto'?'type-moto':'type-carro';
+}
 
 function save(){
   try{
-    sessionStorage.setItem('ff_vehicles', JSON.stringify(vehicles));
-    sessionStorage.setItem('ff_history',  JSON.stringify(history));
+    writeStored(STORAGE_KEYS.vehicles, JSON.stringify(vehicles));
+    writeStored(STORAGE_KEYS.history,  JSON.stringify(history));
+    writeStored(STORAGE_KEYS.selected, selectedVehicleId || '');
   }catch(e){}
 }
 
-// ─────────── TABS ───────────
+// Navegação
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -26,15 +56,16 @@ document.getElementById('go-vehicles')?.addEventListener('click',()=>{
   document.querySelector('[data-tab="veiculos"]').click();
 });
 
-// ─────────── THEME ───────────
+// Tema
 (function(){
   const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
-  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  let d=readStored(STORAGE_KEYS.theme,'') || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   r.setAttribute('data-theme',d);
   updateThemeIcon(d);
   t&&t.addEventListener('click',()=>{
     d=d==='dark'?'light':'dark';
     r.setAttribute('data-theme',d);
+    writeStored(STORAGE_KEYS.theme,d);
     updateThemeIcon(d);
   });
   function updateThemeIcon(mode){
@@ -45,7 +76,7 @@ document.getElementById('go-vehicles')?.addEventListener('click',()=>{
   }
 })();
 
-// ─────────── TOAST ───────────
+// Feedback
 function showToast(msg, type=''){
   const a=document.getElementById('toast-area');
   const t=document.createElement('div');
@@ -55,11 +86,15 @@ function showToast(msg, type=''){
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(8px)';t.style.transition='.2s ease';setTimeout(()=>t.remove(),220);},2800);
 }
 
-// ─────────── VEHICLE RENDER ───────────
+// Veículos
 function renderVehicles(){
   const list=document.getElementById('vehicle-list');
   const empty=document.getElementById('empty-vehicles');
   const badge=document.getElementById('veh-badge');
+  if(!selectedVehicleId && vehicles.length){
+    selectedVehicleId=vehicles[0].id;
+    save();
+  }
   badge.textContent=vehicles.length;
   if(!vehicles.length){empty.style.display='flex';list.innerHTML='';return;}
   empty.style.display='none';
@@ -70,11 +105,16 @@ function renderVehicles(){
       </div>
       <div class="vehicle-info">
         <div class="vehicle-name">${v.nome}</div>
-        <div class="vehicle-meta">⛽ ${v.kmGas} km/l (gasolina) · 🌿 ${v.kmEta} km/l (etanol)</div>
+        <div class="vehicle-meta">${vehicleTypeLabel(v.tipo)} · ${v.kmGas} km/l (gasolina) · ${v.kmEta} km/l (etanol)</div>
+        <div class="vehicle-type-pill ${vehicleTypeBadgeClass(v.tipo)}">${vehicleTypeLabel(v.tipo)}</div>
       </div>
       <div class="vehicle-actions">
-        <button class="icon-btn edit" data-action="edit" data-id="${v.id}" aria-label="Editar">✏️</button>
-        <button class="icon-btn" data-action="del" data-id="${v.id}" aria-label="Excluir">🗑️</button>
+        <button class="icon-btn edit" data-action="edit" data-id="${v.id}" aria-label="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+        <button class="icon-btn" data-action="del" data-id="${v.id}" aria-label="Excluir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
       </div>
     </div>
   `).join('');
@@ -85,7 +125,7 @@ function renderVehicles(){
       selectedVehicleId=el.dataset.id;
       renderVehicles();
       refreshCalcPanel();
-      showToast('✅ '+vehicles.find(v=>v.id===el.dataset.id)?.nome+' selecionado!');
+      showToast(vehicles.find(v=>v.id===el.dataset.id)?.nome+' selecionado.');
     });
     el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')el.click();});
   });
@@ -102,13 +142,14 @@ function renderVehicles(){
   });
 }
 
-// ─────────── MODAL ───────────
+// Modal
 const overlay=document.getElementById('modal-overlay');
 function openModal(id=null){
   document.getElementById('edit-id').value=id||'';
   const v=id?vehicles.find(x=>x.id===id):null;
   document.getElementById('modal-title').textContent=id?'Editar Veículo':'Novo Veículo';
   document.getElementById('v-nome').value=v?.nome||'';
+  document.getElementById('v-tipo').value=v?.tipo||'carro';
   document.getElementById('v-marca').value=v?.marca||'';
   document.getElementById('v-modelo').value=v?.modelo||'';
   document.getElementById('v-km-gas').value=v?.kmGas||'';
@@ -122,20 +163,22 @@ overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
 
 document.getElementById('modal-save').addEventListener('click',()=>{
   const nome=document.getElementById('v-nome').value.trim();
+  const tipo=document.getElementById('v-tipo').value;
   const kmGas=parseFloat(document.getElementById('v-km-gas').value);
   const kmEta=parseFloat(document.getElementById('v-km-eta').value);
   if(!nome){showToast('Informe o nome do veículo.','error');return;}
+  if(tipo!=='carro'&&tipo!=='moto'){showToast('Informe o tipo do veículo.','error');return;}
   if(!kmGas||kmGas<=0){showToast('Informe a autonomia com gasolina.','error');return;}
   if(!kmEta||kmEta<=0){showToast('Informe a autonomia com etanol.','error');return;}
   const id=document.getElementById('edit-id').value;
-  const obj={id:id||Date.now().toString(),nome,marca:document.getElementById('v-marca').value.trim(),modelo:document.getElementById('v-modelo').value.trim(),kmGas,kmEta};
+  const obj={id:id||Date.now().toString(),nome,tipo,marca:document.getElementById('v-marca').value.trim(),modelo:document.getElementById('v-modelo').value.trim(),kmGas,kmEta};
   if(id){vehicles=vehicles.map(v=>v.id===id?obj:v);}else{vehicles.push(obj);selectedVehicleId=obj.id;}
   save();renderVehicles();refreshCalcPanel();closeModal();
-  showToast(id?'Veículo atualizado!':'Veículo cadastrado! ✅');
+  showToast(id?'Veículo atualizado!':'Veículo cadastrado!');
 });
 document.getElementById('btn-add-vehicle').addEventListener('click',()=>openModal());
 
-// ─────────── CALC PANEL ───────────
+// Cálculo
 function refreshCalcPanel(){
   const v=vehicles.find(x=>x.id===selectedVehicleId);
   const warn=document.getElementById('no-vehicle-warn');
@@ -147,7 +190,12 @@ function refreshCalcPanel(){
   }
   warn.style.display='none';card.style.display='block';
   document.getElementById('calc-veh-name').textContent=v.nome+(v.marca?' — '+v.marca+(v.modelo?' '+v.modelo:''):'');
-  document.getElementById('calc-veh-meta').textContent=`⛽ ${v.kmGas} km/l gasolina · 🌿 ${v.kmEta} km/l etanol`;
+  document.getElementById('calc-veh-meta').textContent=`${v.kmGas} km/l gasolina · ${v.kmEta} km/l etanol`;
+  const typeEl=document.getElementById('calc-veh-type');
+  if(typeEl){
+    typeEl.textContent=vehicleTypeLabel(v.tipo);
+    typeEl.className='vehicle-type-pill '+vehicleTypeBadgeClass(v.tipo);
+  }
 }
 document.getElementById('btn-change-vehicle').addEventListener('click',()=>{
   document.querySelector('[data-tab="veiculos"]').click();
@@ -171,11 +219,10 @@ function calcular(){
   const litros=parseFloat(document.getElementById('litros').value)||0;
   if(!pg||pg<=0||!pe||pe<=0){showToast('Informe os preços de gasolina e etanol.','error');return;}
 
-  // Custo por km
   const custoGas=pg/v.kmGas;
   const custoEta=pe/v.kmEta;
   const ratio=pe/pg;
-  const thresholdRatio=v.kmEta/v.kmGas; // etanol compensa se ratio < threshold
+  const thresholdRatio=v.kmEta/v.kmGas;
 
   const winner=custoEta<custoGas?'eta':custoGas<custoEta?'gas':'tie';
   const economia=Math.abs(custoGas-custoEta);
@@ -187,7 +234,7 @@ function calcular(){
 
   rc.className='result-card show '+(winner==='gas'?'winner-gas':winner==='eta'?'winner-eta':'tie');
 
-  document.getElementById('res-icon').textContent=winner==='gas'?'⛽':winner==='eta'?'🌿':'⚖️';
+  document.getElementById('res-icon').textContent=winner==='gas'?'G':winner==='eta'?'E':'T';
   document.getElementById('res-verdict').textContent=
     winner==='gas'?'Gasolina é mais vantajosa!':
     winner==='eta'?'Etanol é mais vantajoso!':'Praticamente empatados!';
@@ -197,12 +244,12 @@ function calcular(){
 
   let mhtml=`
     <div class="metric${winner==='gas'?' best':''}">
-      <div class="metric-label">⛽ Gasolina — custo/km</div>
+      <div class="metric-label">Gasolina — custo/km</div>
       <div class="metric-value">R$ ${fmt(custoGas)}</div>
       <div class="metric-detail">Preço: R$ ${fmt(pg)}/L · ${v.kmGas} km/L</div>
     </div>
     <div class="metric${winner==='eta'?' best':''}">
-      <div class="metric-label">🌿 Etanol — custo/km</div>
+      <div class="metric-label">Etanol — custo/km</div>
       <div class="metric-value">R$ ${fmt(custoEta)}</div>
       <div class="metric-detail">Preço: R$ ${fmt(pe)}/L · ${v.kmEta} km/L</div>
     </div>
@@ -223,7 +270,6 @@ function calcular(){
   }
   metrics.innerHTML=mhtml;
 
-  // ratio bar
   rbar.style.display='block';
   const barGasPct=100;
   const barEtaPct=Math.min(100,(custoEta/custoGas)*100);
@@ -233,7 +279,6 @@ function calcular(){
     document.getElementById('bar-ratio-pct').textContent='Relação: '+fmt(ratio*100)+'% (limite '+fmt(thresholdRatio*100)+'%)';
   },50);
 
-  // salvar histórico
   const entry={
     id:Date.now().toString(),
     veiculo:v.nome,
@@ -247,7 +292,7 @@ function calcular(){
   save();
 }
 
-// ─────────── HISTORY ───────────
+// Histórico
 function renderHistory(){
   const list=document.getElementById('history-list');
   const empty=document.getElementById('empty-history');
@@ -256,7 +301,7 @@ function renderHistory(){
   list.innerHTML=history.slice(0,20).map(h=>`
     <div class="history-item">
       <span class="history-badge ${h.winner==='gas'?'badge-gas':h.winner==='eta'?'badge-eta':'badge-tie'}">
-        ${h.winner==='gas'?'⛽ Gas':h.winner==='eta'?'🌿 Eta':'⚖️'}
+        ${h.winner==='gas'?'Gasolina':h.winner==='eta'?'Etanol':'Empate'}
       </span>
       <div class="history-info">
         <div class="vehicle-name">${h.veiculo}</div>
@@ -270,6 +315,7 @@ document.getElementById('btn-clear-history').addEventListener('click',()=>{
   history=[];save();renderHistory();showToast('Histórico limpo.');
 });
 
-// ─────────── INIT ───────────
+// Inicialização
 renderVehicles();
+renderHistory();
 refreshCalcPanel();
