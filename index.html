@@ -12,7 +12,6 @@
 <body>
 <div class="app">
 
-<!-- HEADER -->
 <header class="header">
   <a class="logo" href="#">
     <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
@@ -31,7 +30,6 @@
   </div>
 </header>
 
-<!-- TABS -->
 <nav class="tabs-bar" role="tablist">
   <button class="tab-btn active" data-tab="veiculos" role="tab">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
@@ -48,7 +46,6 @@
   </button>
 </nav>
 
-<!-- PANEL: VEICULOS -->
 <section class="panel active" id="tab-veiculos" role="tabpanel">
   <h1 class="section-title">Meus Veículos</h1>
   <p class="section-sub">Cadastre seus veículos com a autonomia de cada combustível.</p>
@@ -77,16 +74,14 @@
   </div>
 </section>
 
-<!-- PANEL: CALCULAR -->
 <section class="panel" id="tab-calcular" role="tabpanel">
   <h1 class="section-title">Calcular</h1>
   <p class="section-sub">Informe os preços do posto e descubra a melhor opção.</p>
 
   <div id="no-vehicle-warn" class="no-vehicle" style="display:none;">
-    ⚠️ Selecione um veículo na aba <a id="go-vehicles">Meus Veículos</a> antes de calcular.
+    Selecione um veículo na aba <a id="go-vehicles">Meus Veículos</a> antes de calcular.
   </div>
 
-  <!-- veículo selecionado -->
   <div class="card" id="selected-vehicle-card" style="display:none;">
     <div class="card-header" style="margin-bottom:0">
       <div style="display:flex;align-items:center;gap:.75rem">
@@ -96,13 +91,13 @@
         <div>
           <div class="vehicle-name" id="calc-veh-name">—</div>
           <div class="vehicle-meta" id="calc-veh-meta">—</div>
+          <div class="vehicle-type-pill" id="calc-veh-type">—</div>
         </div>
       </div>
       <button class="btn btn-secondary btn-sm" id="btn-change-vehicle">Trocar</button>
     </div>
   </div>
 
-  <!-- preços -->
   <div class="card">
     <div class="card-header"><span class="card-title">Preços no posto hoje</span></div>
     <div class="fuel-inputs">
@@ -137,10 +132,9 @@
     </div>
   </div>
 
-  <!-- RESULTADO -->
   <div class="result-card" id="result-card">
     <div class="result-header">
-      <div class="result-icon" id="res-icon">⛽</div>
+      <div class="result-icon" id="res-icon">G</div>
       <div>
         <div class="result-verdict" id="res-verdict">—</div>
         <div class="result-sub" id="res-sub">—</div>
@@ -168,7 +162,6 @@
   </div>
 </section>
 
-<!-- PANEL: HISTÓRICO -->
 <section class="panel" id="tab-historico" role="tabpanel">
   <h1 class="section-title">Histórico</h1>
   <p class="section-sub">Seus últimos cálculos salvos automaticamente.</p>
@@ -189,12 +182,10 @@
   </div>
 </section>
 
-</div><!-- .app -->
+</div>
 
-<!-- TOAST AREA -->
 <div class="toast-area" id="toast-area"></div>
 
-<!-- MODAL: CADASTRO / EDIÇÃO DE VEÍCULO -->
 <div class="overlay" id="modal-overlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <h2 class="modal-title" id="modal-title">Novo Veículo</h2>
@@ -203,6 +194,13 @@
       <div class="field">
         <label for="v-nome">Nome / Apelido *</label>
         <input id="v-nome" placeholder="Ex: HB20 Prata" required>
+      </div>
+      <div class="field">
+        <label for="v-tipo">Tipo do veículo *</label>
+        <select id="v-tipo" required>
+          <option value="carro">Carro</option>
+          <option value="moto">Moto</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="field">
