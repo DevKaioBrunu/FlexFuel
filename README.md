@@ -2,6 +2,8 @@
 
 FlexFuel é um app frontend para comparar gasolina e etanol com base na autonomia real do veículo cadastrado. A aplicação permite salvar veículos, informar preços do posto e descobrir qual combustível está mais vantajoso no momento.
 
+## Link da aplicação: https://flex-fuel-six.vercel.app/
+
 ## Funcionalidades
 
 - Cadastro de veículos com nome, marca, modelo e autonomia para gasolina e etanol.
