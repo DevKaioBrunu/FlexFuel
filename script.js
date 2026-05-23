@@ -32,6 +32,13 @@ function vehicleTypeBadgeClass(type){
   return type==='moto'?'type-moto':'type-carro';
 }
 
+function vehicleTypeIcon(type){
+  if(type==='moto'){
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M8 17l3-6h4l2 4"/><path d="M11 11l2-4h3"/><path d="M14 7h3l2 4"/></svg>';
+  }
+  return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l1.8-4.2a2.5 2.5 0 0 1 2.3-1.5h7.8a2.5 2.5 0 0 1 2.3 1.5L20 12.5"/><path d="M3.5 12.5h17a1.5 1.5 0 0 1 1.5 1.5v2.5a1 1 0 0 1-1 1h-2"/><path d="M5 17.5H3a1 1 0 0 1-1-1V14a1.5 1.5 0 0 1 1.5-1.5"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>';
+}
+
 function save(){
   try{
     writeStored(STORAGE_KEYS.vehicles, JSON.stringify(vehicles));
@@ -87,6 +94,15 @@ function showToast(msg, type=''){
 }
 
 // Veículos
+function updateVehicleEmptyState(){
+  const emptyState=document.getElementById('estado-vazio');
+  const vehiclesCard=document.getElementById('vehicles-card');
+  const threshold=document.getElementById('threshold-box');
+  const hasVehicles=vehicles.length>0;
+  if(emptyState) emptyState.classList.toggle('is-hidden',hasVehicles);
+  if(vehiclesCard) vehiclesCard.classList.toggle('is-hidden',!hasVehicles);
+  if(threshold) threshold.classList.toggle('is-hidden',!hasVehicles);
+}
 function renderVehicles(){
   const list=document.getElementById('vehicle-list');
   const empty=document.getElementById('empty-vehicles');
@@ -96,12 +112,13 @@ function renderVehicles(){
     save();
   }
   badge.textContent=vehicles.length;
+  updateVehicleEmptyState();
   if(!vehicles.length){empty.style.display='flex';list.innerHTML='';return;}
   empty.style.display='none';
   list.innerHTML=vehicles.map(v=>`
     <div class="vehicle-item${selectedVehicleId===v.id?' selected':''}" data-id="${v.id}" tabindex="0" role="button" aria-pressed="${selectedVehicleId===v.id}">
       <div class="vehicle-avatar">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        ${vehicleTypeIcon(v.tipo)}
       </div>
       <div class="vehicle-info">
         <div class="vehicle-name">${v.nome}</div>
@@ -135,6 +152,8 @@ function renderVehicles(){
   });
   list.querySelectorAll('[data-action="del"]').forEach(btn=>{
     btn.addEventListener('click',()=>{
+      const confirmou=window.confirm('Certeza que deseja excluir este veículo? Essa ação não pode ser desfeita.');
+      if(!confirmou)return;
       vehicles=vehicles.filter(v=>v.id!==btn.dataset.id);
       if(selectedVehicleId===btn.dataset.id)selectedVehicleId=null;
       save();renderVehicles();refreshCalcPanel();showToast('Veículo removido.');
@@ -177,15 +196,32 @@ document.getElementById('modal-save').addEventListener('click',()=>{
   showToast(id?'Veículo atualizado!':'Veículo cadastrado!');
 });
 document.getElementById('btn-add-vehicle').addEventListener('click',()=>openModal());
+document.getElementById('btn-empty-add')?.addEventListener('click',()=>openModal());
+document.getElementById('calc-empty-cta')?.addEventListener('click',()=>{
+  document.querySelector('[data-tab="veiculos"]').click();
+  openModal();
+});
 
 // Cálculo
 function refreshCalcPanel(){
   const v=vehicles.find(x=>x.id===selectedVehicleId);
   const warn=document.getElementById('no-vehicle-warn');
   const card=document.getElementById('selected-vehicle-card');
+  const calcEmpty=document.getElementById('calc-empty');
+  const calcCard=document.getElementById('calc-card');
+  const resultCard=document.getElementById('result-card');
+  const hasVehicles=vehicles.length>0;
+  if(calcEmpty) calcEmpty.classList.toggle('is-hidden',hasVehicles);
+  if(calcCard) calcCard.classList.toggle('is-hidden',!hasVehicles);
+  if(resultCard) resultCard.classList.toggle('is-hidden',!hasVehicles);
+  if(!hasVehicles){
+    warn.style.display='none';card.style.display='none';
+    resultCard.className='result-card';
+    return;
+  }
   if(!v){
     warn.style.display='flex';card.style.display='none';
-    document.getElementById('result-card').className='result-card';
+    resultCard.className='result-card';
     return;
   }
   warn.style.display='none';card.style.display='block';
@@ -196,6 +232,8 @@ function refreshCalcPanel(){
     typeEl.textContent=vehicleTypeLabel(v.tipo);
     typeEl.className='vehicle-type-pill '+vehicleTypeBadgeClass(v.tipo);
   }
+  const avatarEl=document.getElementById('calc-veh-avatar');
+  if(avatarEl) avatarEl.innerHTML=vehicleTypeIcon(v.tipo);
 }
 document.getElementById('btn-change-vehicle').addEventListener('click',()=>{
   document.querySelector('[data-tab="veiculos"]').click();
@@ -312,6 +350,8 @@ function renderHistory(){
   `).join('');
 }
 document.getElementById('btn-clear-history').addEventListener('click',()=>{
+  const confirmou=window.confirm('Certeza que deseja limpar todo o histórico? Essa ação não pode ser desfeita.');
+  if(!confirmou)return;
   history=[];save();renderHistory();showToast('Histórico limpo.');
 });
 
