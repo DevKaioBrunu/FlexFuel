@@ -6,7 +6,7 @@ FlexFuel é uma aplicação frontend para comparar gasolina e etanol com base na
 
 O projeto foi pensado para ser leve, responsivo e direto ao ponto, com foco em uma interface limpa e uma experiência visual mais sofisticada.
 
-## Link da aplicação: https://flex-fuel-six.vercel.app/
+## Link da aplicação: https://flex-fuel-eco.vercel.app/
 
 ## Funcionalidades
 
