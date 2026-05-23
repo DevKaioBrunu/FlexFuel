@@ -32,7 +32,7 @@
 
 <nav class="tabs-bar" role="tablist">
   <button class="tab-btn active" data-tab="veiculos" role="tab">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l1.8-4.2a2.5 2.5 0 0 1 2.3-1.5h7.8a2.5 2.5 0 0 1 2.3 1.5L20 12.5"/><path d="M3.5 12.5h17a1.5 1.5 0 0 1 1.5 1.5v2.5a1 1 0 0 1-1 1h-2"/><path d="M5 17.5H3a1 1 0 0 1-1-1V14a1.5 1.5 0 0 1 1.5-1.5"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
     Meus Veículos
     <span class="badge" id="veh-badge">0</span>
   </button>
@@ -50,7 +50,16 @@
   <h1 class="section-title">Meus Veículos</h1>
   <p class="section-sub">Cadastre seus veículos com a autonomia de cada combustível.</p>
 
-  <div class="card">
+  <div id="estado-vazio" class="empty-state is-hidden">
+    <div class="empty">
+      <div class="empty-icon"></div>
+      <h3>Parece que você ainda não tem um carro...</h3>
+      <p>Cadastre seu primeiro veículo para começar a comparar gasolina e etanol.</p>
+      <button class="btn btn-primary" id="btn-empty-add">Cadastrar Primeiro Veículo</button>
+    </div>
+  </div>
+
+  <div class="card" id="vehicles-card">
     <div class="card-header">
       <span class="card-title">Veículos cadastrados</span>
       <button class="btn btn-primary btn-sm" id="btn-add-vehicle">
@@ -68,7 +77,7 @@
     </div>
   </div>
 
-  <div class="threshold-box">
+  <div class="threshold-box" id="threshold-box">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <span><strong>Regra geral:</strong> O etanol é vantajoso quando seu preço é até <strong>70%</strong> do preço da gasolina. Com a autonomia cadastrada, o app calcula com precisão para o seu veículo.</span>
   </div>
@@ -78,6 +87,13 @@
   <h1 class="section-title">Calcular</h1>
   <p class="section-sub">Informe os preços do posto e descubra a melhor opção.</p>
 
+  <div id="calc-empty" class="empty calc-empty is-hidden">
+    <div class="empty-icon"></div>
+    <h3>Antes de calcular...</h3>
+    <p>Vá à tela inicial e adicione um carro para poder calcular os custos e comparar.</p>
+    <button class="btn btn-primary" id="calc-empty-cta">Cadastrar Primeiro Veículo</button>
+  </div>
+
   <div id="no-vehicle-warn" class="no-vehicle" style="display:none;">
     Selecione um veículo na aba <a id="go-vehicles">Meus Veículos</a> antes de calcular.
   </div>
@@ -85,7 +101,7 @@
   <div class="card" id="selected-vehicle-card" style="display:none;">
     <div class="card-header" style="margin-bottom:0">
       <div style="display:flex;align-items:center;gap:.75rem">
-        <div class="vehicle-avatar" style="background:var(--color-primary);color:#fff;">
+        <div class="vehicle-avatar" id="calc-veh-avatar" style="background:var(--color-primary);color:#fff;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
         </div>
         <div>
@@ -98,7 +114,7 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="calc-card">
     <div class="card-header"><span class="card-title">Preços no posto hoje</span></div>
     <div class="fuel-inputs">
       <div class="fuel-card gasolina">
@@ -167,7 +183,7 @@
   <p class="section-sub">Seus últimos cálculos salvos automaticamente.</p>
 
   <div class="card" style="padding:0;overflow:hidden;">
-    <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--color-divider);display:flex;align-items:center;justify-content:space-between;">
+    <div class="card-header card-header--padded">
       <span class="card-title">Cálculos recentes</span>
       <button class="btn btn-secondary btn-sm" id="btn-clear-history">Limpar tudo</button>
     </div>
